@@ -1,64 +1,46 @@
 import $ from 'jquery';
+import { wiAuth } from './wiauth.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { auth, db } from './firebase/init.js';
-import { onAuthStateChanged } from "firebase/auth"; //Para detectar cambios Login 
-import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, collection, query, where, writeBatch, serverTimestamp, limit} from "firebase/firestore";
-import { wiTema, Mensaje, Notificacion, savels, getls, removels, gosaves, getsaves, adtm, infoo, accederRol } from './widev.js';
-import { wiAuth } from './wiauth.js'; //Para autenticación login, registro y Restablecer
+import { db } from './firebase/init.js';
+import { getDocs, collection, query, limit } from "firebase/firestore";
+import { savels, getls, removels } from './widev.js';
 
-// PARA LIMPIAR INICIO DE SESSION + CONECTARSE AL SESION 
-onAuthStateChanged(auth, async user => {
-  if(!user) return (removels('wiAuthIn'), removels('wiAuthRol'));
-
-  if (getls('wiAuthIn')){
-    const cacheRol = getls('wiAuthRol');
-    if(cacheRol) return accederRol(cacheRol);  //Cache primero  
-
-    const busq = await getDocs(query(collection(db, 'smiles'), where('email', '==', user.email)));
-    accederRol(busq.docs[0]?.data()?.rol); // Luego hacemos consultas si no tiene, primera vez
-  } // Acceso cuando es autenticado de acuerdo a roles 
+// Alturas compactas
+const syncHeights = () => $('.webz').each((_, el) => {
+  const $el = $(el);
+  $el.find('.webx').css('height', $el.find('.weby').outerHeight());
 });
+const debouncedSync = (() => {
+  let t; return () => (clearTimeout(t), t = setTimeout(syncHeights, 120));
+})();
 
-// Mensaje('Hola mi vidita hermosa muaaaak');
-// PARA ACTUALIZAR ALTURA DE CADA MENU Y CARTA 
-const syncHeights = () => {
-  $('.webz').each(function () {
-    const h = $(this).find('.weby').outerHeight();
-    $(this).find('.webx').css('height', h + 'px');
-  });
+$(debouncedSync);
+$(window).on('load resize orientationchange', debouncedSync);
+
+// Config compacta
+const CFG = {
+  COL_CARTAS: 'cartasdb',
+  COL_HOJAS: 'hojasdb',
+  C_CARTAS: 'cartasdbCachePublic',
+  C_HOJAS: 'hojasdbCachePublic',
+  HRS: 6,
+  LIM_CARTAS: 500,
+  LIM_HOJAS: 50,
+  IMG_FALLBACK: 'https://i.postimg.cc/KvN8qF2P/menu-default.jpg'
 };
 
-$(syncHeights);
-$(window).on('load resize', syncHeights); 
+const money = v => (v == null || v === '') ? '' : `S/${Number(v).toFixed(2)}`;
 
-
-$(syncHeights);
-$(window).on('load resize orientationchange', syncHeights);
-
-// ==============================
-// JS PARA MENU DINAMICO [Start]
-// ==============================
-const HEADERS = {
-  1: { title: 'DESAYUNOS' },
-  2: { title: '🍳 BRUNCH', note: '👉 Upgrade tu bebida a cappuccino o jugo premium (naranja, fresa, maracuyá) por +S/4' },
-  3: { title: '➕ ADICIONALES' }, // y luego 🥪 TRIPLES si deseas otra sub-sección
-  4: { title: 'SÁNDWICHES CLÁSICOS 🥙', note: '👉 Agrega papas fritas por +S/6' },
-  5: { title: '🥩 SÁNDWICHES PREMIUM (con papas fritas)' },
-  6: { title: '🍔 HAMBURGUESAS' },
-  7: { title: '🥗 ENSALADAS / 🍰 DULCES' }
-};
-
-const priceTxt = v => (v==null || v==='') ? '' : `S/${Number(v).toFixed(2)}`;
-
-// Render de una hoja
-function renderHoja(num, items) {
-  const h = HEADERS[num] || {};
-  const note = h.note ? `<p class="menu-note">${h.note}</p>` : '';
-  const bodyItems = items.map(it => `
+// Render de una hoja con imagen/título/nota/icono dinámicos
+const renderHoja = (num, items, headers) => {
+  const h = headers[num] || {};
+  const note = h.nota ? `<p class="menu-note"><i class="fas fa-info-circle"></i> ${h.nota}</p>` : '';
+  const img = h.imagen || CFG.IMG_FALLBACK;
+  const itemsHtml = items.map(it => `
     <div class="menu-item">
       <div class="item-header">
         <h3>${it.titulo || ''}</h3>
-        <span class="price">${priceTxt(it.precio)}</span>
+        <span class="price">${money(it.precio)}</span>
       </div>
       ${it.descripcion ? `<p class="description">${it.descripcion}</p>` : ''}
       <div class="dotted-line"></div>
@@ -66,82 +48,121 @@ function renderHoja(num, items) {
   `).join('');
 
   return `
-    <div class="webz">
+    <div class="webz" data-hoja="${num}">
       <div class="webx">
-        <img src="menu.avif" alt="Imagen del menú">
+        <img src="${img}" alt="Menú ${h.titulo || `Hoja ${num}`}" loading="lazy"
+             onerror="this.src='${CFG.IMG_FALLBACK}';this.onerror=null;">
+        <div class="image-overlay"><i class="fas ${h.icono || 'fa-utensils'}"></i></div>
       </div>
       <div class="weby">
         <div class="menu-column">
           <header class="menu-header">
-            <h2 class="menu-category">${h.title || ''}</h2>
+            <h2 class="menu-category">
+              <i class="fas ${h.icono || 'fa-utensils'}"></i>
+              ${h.titulo || `Hoja ${num}`}
+            </h2>
             ${note}
           </header>
           <div class="menu-content">
-            ${bodyItems || ''}
+            ${itemsHtml || '<p class="no-items">No hay elementos disponibles</p>'}
           </div>
+          ${items.length ? `<div class="menu-footer"><small>${items.length} elementos</small></div>` : ''}
         </div>
       </div>
     </div>
-    <div class="separador"> ${num} </div>
+    <div class="separador">
+      <span class="sep-number">${num}</span>
+      <span class="sep-title">${h.titulo || `Sección ${num}`}</span>
+    </div>
   `;
-}
+};
 
+// Pintar menú desde arrays
+const pintarMenu = (cartas, headers) => {
+  const $root = $('#menu-app');
+  const grupos = cartas
+    .filter(c => (c.estado || '').toLowerCase() === 'activo')
+    .reduce((acc, c) => {
+      const n = Number(c.hoja || 0);
+      if (n > 0) (acc[n] = acc[n] || []).push(c);
+      return acc;
+    }, {});
+  
+  const hojasKeys = Array.from(
+    new Set([...Object.keys(grupos).map(Number), ...Object.keys(headers).map(Number)])
+  ).sort((a,b)=>a-b);
+
+  const html = hojasKeys.map(num => {
+    const items = (grupos[num] || []).sort((a,b) => {
+      const d = (Number(a.orden||0)) - (Number(b.orden||0));
+      return d !== 0 ? d : String(a.titulo||'').localeCompare(String(b.titulo||''));
+    });
+    return renderHoja(num, items, headers);
+  }).join('');
+
+  $root.html(html);
+
+  // Esperar imágenes y fuentes para ajustar altura
+  const imgs = $root.find('img').toArray();
+  const waitImgs = Promise.all(imgs.map(img => img.complete ? Promise.resolve() :
+    new Promise(res => { img.onload = img.onerror = res; })));
+  const waitFonts = (document.fonts?.ready) || Promise.resolve();
+  Promise.all([waitImgs, waitFonts]).then(() => setTimeout(syncHeights, 80));
+};
+
+// Carga pública con cache ultracorto
 async function cargarCartasPublico() {
-  const ROOT = $('#menu-app');
-  const CACHE_KEY = 'cartasdbCachePublic';
-  const CACHE_HRS = 6;
-
-  // Usa cache si no hay ?refresh
-  let data = getls(CACHE_KEY) || [];
   const needsRefresh = /\brefresh=1\b/i.test(location.search);
+  const cacheCartas = getls(CFG.C_CARTAS) || [];
+  const cacheHojasArr = getls(CFG.C_HOJAS) || [];
+  const cacheHeaders = cacheHojasArr.reduce((a,h)=>(a[h.numero]=h,a), {});
 
-  const pintar = (arr) => {
-    // Agrupa por hoja y ordena
-    const grupos = {};
-    arr.filter(x => (x.estado||'').toLowerCase() === 'activo')
-       .forEach(x => {
-          const hoja = Number(x.hoja||0);
-          if(!hoja) return;
-          (grupos[hoja] ||= []).push(x);
-       });
-
-    const html = [1,2,3,4,5,6,7].map(n => {
-      const items = (grupos[n]||[]).sort((a,b)=>{
-        const ao = Number(a.orden||0), bo = Number(b.orden||0);
-        if(ao!==bo) return ao-bo;
-        return String(a.titulo||'').localeCompare(String(b.titulo||''));
-      });
-      return renderHoja(n, items);
-    }).join('');
-
-    ROOT.html(html);
-    // Ajustar alturas (fuentes primero)
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.finally(syncHeights);
-    } else {
-      syncHeights();
-    }
-  };
-
-  if (data.length && !needsRefresh) {
-    pintar(data);
+  if (cacheCartas.length && Object.keys(cacheHeaders).length && !needsRefresh) {
+    pintarMenu(cacheCartas, cacheHeaders);
   }
 
-  // Carga online y cachea (1 lectura)
   try {
-    const snap = await getDocs(query(collection(db, 'cartasdb'), limit(500)));
-    data = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    savels(CACHE_KEY, data, CACHE_HRS);
-    pintar(data);
-  } catch(e){
-    console.error(e);
-    if(!data.length) {
-      $('#menu-app').html('<p style="text-align:center;padding:2rem">No se pudo cargar el menú.</p>');
+    const [snapCartas, snapHojas] = await Promise.all([
+      getDocs(query(collection(db, CFG.COL_CARTAS), limit(CFG.LIM_CARTAS))),
+      getDocs(query(collection(db, CFG.COL_HOJAS), limit(CFG.LIM_HOJAS)))
+    ]);
+    const cartas = snapCartas.docs.map(d => ({ id:d.id, ...d.data() }));
+    const hojasArr = snapHojas.docs.map(d => ({ id:d.id, ...d.data() }));
+    const headers = hojasArr.reduce((a,h)=>(a[h.numero]=h,a), {});
+    savels(CFG.C_CARTAS, cartas, CFG.HRS);
+    savels(CFG.C_HOJAS, hojasArr, CFG.HRS);
+    pintarMenu(cartas, headers);
+  } catch (e) {
+    console.error('Error cargando menú:', e);
+    if (!cacheCartas.length) {
+      $('#menu-app').html(`
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h2>No se pudo cargar el menú</h2>
+          <p>Verifica tu conexión e intenta nuevamente.</p>
+          <button class="retry-btn" onclick="location.reload()">
+            <i class="fas fa-redo"></i> Reintentar
+          </button>
+        </div>
+      `);
     }
   }
 }
 
-$(cargarCartasPublico);
-// ==============================
-// JS PARA MENU DINAMICO [End]
-// ==============================
+$(document).ready(() => {
+  cargarCartasPublico();
+
+  // Atajo para limpiar cache y recargar: Ctrl+Shift+R
+  $(document).on('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'R') {
+      removels(CFG.C_CARTAS, CFG.C_HOJAS);
+      location.reload();
+    }
+  });
+});
+
+// Exponer utilidades mínimas
+window.hawkaMenu = {
+  reload: cargarCartasPublico,
+  clearCache: () => removels(CFG.C_CARTAS, CFG.C_HOJAS)
+};

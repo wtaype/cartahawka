@@ -22,8 +22,12 @@ service cloud.firestore {
     match /cartasdb/{document} {
       allow read: if true;
       allow write: if true; 
-    } // Acceso lectura general
-   
+    } // Acceso lectura general   
+    
+    match /hojasdb/{document} {
+      allow read: if true;
+      allow write: if true; 
+    } // Acceso lectura general  
     
   }
 }

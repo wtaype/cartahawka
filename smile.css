@@ -943,10 +943,17 @@ opacity:1
   gap: 0.5rem;
 }
 
-.imagen-info {
+.imagen-info, .nota-info {
   color: var(--info);
   cursor: help;
   font-size: 0.9rem;
+}
+.nota_preview {
+    font-size: var(--fz_s1);
+    text-transform: none;
+    padding-block: 0 .5vh;
+    margin-block: 0 1.5vh;
+    border-bottom: 1px solid var(--haw);
 }
 
 .hoja-info small {
@@ -1260,7 +1267,7 @@ opacity:1
 .preview-title {
   font-size: var(--fz_m);
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: .5vh;
   display: flex;
   align-items: center;
   gap: 0.5rem;
