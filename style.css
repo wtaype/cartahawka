@@ -1,19 +1,59 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,700&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
 
-:root {
+:root{
   --primary-text: #2d2d2d;
   --secondary-text: #666666;
   --accent-color: #8b5a3c;
   --light-accent: #a66d4a;
   --bg-white: rgba(255, 255, 255, 0.95);
   --border-color: #e0e0e0;
+--fz_s1:.62vw;
+--fz_s2:.67vw;
+--fz_s3:.72vw;
+--fz_s4:.77vw;
+--fz_m:.8vw;
+--fz_m1:.85vw;
+--fz_m2:.9vw;
+--fz_m3:.95vw;
+--fz_l:1vw;
+--fz_l1:1.07vw;
+--fz_l2:1.15vw;
+--fz_l3:1.2vw;
+--fz_t1:1.6vw;
+--fz_t2:1.75vw;
+--ff_P:"Poppins",segoe ui;
+--ff_R:"Rubik",segoe ui;
+--F:#fff;
+--0:#000;
+--D:#ddd;
+--success:#3cd741;
+--error:#ff3849;
+--warning:#F9A825;
+--info:#00a8e6;
+--bsh:0 4px 6px rgba(0,0,0,.1):
+--bg:#ffccd1;
+--hbg:#fff0f1;
+--wb:#ffebed;
+--tx:#000;
+--txa:#FFF;
+--txe:#000;
+--txh:#ff3849;
+--bdr:#ff99a1;
+--mco:#ff3849;
+--svg:#ff3849;
+--bxs:#ffdbde;
+--bga:#ff3849;
+--hv:#ff7a85;
+--hva:#ff3849
 }
-
-/* Reset básico */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+*{
+margin:0;
+padding:0;
+color:var(--tx);
+box-sizing:border-box;
+scroll-behavior:smooth;
+font-size:var(--fz_m);
+font-family:var(--ff_P)
 }
 
 html, body {
@@ -180,12 +220,21 @@ body {
   max-width: 100%;
 }
 
+
 .dotted-line {
   border-bottom: 1px dotted #ccc;
   margin-top: 10px;
 }
 .menu-item:last-child .dotted-line{
   border: none;
+}
+
+.foo{
+  text-align: center;
+}
+.foo *{
+  font-size: 1.4vh;
+  padding-block: 2vh 1vh;
 }
 
 

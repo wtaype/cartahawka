@@ -1,6 +1,4 @@
 import $ from 'jquery'; 
-
-
 // ==============================
 // FUNCIONES DE TEMAS CON jQuery
 // ==============================

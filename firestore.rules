@@ -19,23 +19,11 @@ service cloud.firestore {
       allow write: if true; 
     } // Acceso lectura general
 
-    match /smilenotas/{id} {
-      allow read: if request.auth != null
-                  && resource.data.email == request.auth.token.email;
-      allow create: if request.auth != null
-                    && request.resource.data.email == request.auth.token.email;
-      allow update, delete: if request.auth != null
-                            && resource.data.email == request.auth.token.email;
-    }
-
-    match /smileimgs/{id} {
-      allow read: if request.auth != null
-                  && resource.data.email == request.auth.token.email;
-      allow create: if request.auth != null
-                    && request.resource.data.email == request.auth.token.email;
-      allow update, delete: if request.auth != null
-                            && resource.data.email == request.auth.token.email;
-    }    
+    match /cartasdb/{document} {
+      allow read: if true;
+      allow write: if true; 
+    } // Acceso lectura general
+   
     
   }
 }
