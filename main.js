@@ -3,7 +3,7 @@ import { wiAuth } from './wiauth.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { db } from './firebase/init.js';
 import { getDocs, collection, query, limit } from "firebase/firestore";
-import { savels, getls, removels } from './widev.js';
+import { wiTema, Mensaje, Notificacion, savels, getls, removels, accederRol, gosaves, getsaves, showLoading, infoo } from './widev.js';
 
 // Alturas compactas
 const syncHeights = () => $('.webz').each((_, el) => {
@@ -66,13 +66,11 @@ const renderHoja = (num, items, headers) => {
           <div class="menu-content">
             ${itemsHtml || '<p class="no-items">No hay elementos disponibles</p>'}
           </div>
-          ${items.length ? `<div class="menu-footer"><small>${items.length} elementos</small></div>` : ''}
         </div>
       </div>
     </div>
     <div class="separador">
       <span class="sep-number">${num}</span>
-      <span class="sep-title">${h.titulo || `Sección ${num}`}</span>
     </div>
   `;
 };

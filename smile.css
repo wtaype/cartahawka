@@ -24,6 +24,7 @@
 --error:#ff3849;
 --warning:#F9A825;
 --info:#00a8e6;
+--haw:#8b5a3c; 
 --bsh:0 4px 6px rgba(0,0,0,0.1);
 }
 :root[data-theme="Cielo"]{
@@ -41,7 +42,6 @@
 --bga:#166bc0;
 --hv:#00a8e6;
 --hva:#1873cd;
---haw:#8b5a3c; 
 }
 :root[data-theme="Dulce"]{
 --bg:#ffccd1;
@@ -944,7 +944,7 @@ opacity:1
 }
 
 .imagen-info, .nota-info {
-  color: var(--info);
+  color: var(--mco);
   cursor: help;
   font-size: 0.9rem;
 }
