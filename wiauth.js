@@ -283,25 +283,43 @@ $('#Registrar').click(async function(){
 // LOGIN CENTER APP 
 $('#Login').click(async function() {
   try {
-    const [usuario, password] = ['#email', '#password'].map(id => $(id).val());
-    
+    const [usuario, password] = ['#email', '#password'].map(id => $(id).val().trim());
+    let email = usuario;
+    let rol = 'smile';
     let busq = null;
-    let email = usuario; //Para ingresar con usuario, actualizando a email 
-    if (!usuario.includes('@')){
-      try{
+
+    // Si entran con usuario -> convertir a email
+    if (!usuario.includes('@')) {
+      try {
         busq = await getDoc(doc(db, midb, usuario));
         email = busq.exists() ? busq.data().email : null;
-      }catch(e){console.error('ebdUsuario', e); email = null;}
-    } // Convertir usuario a email si es necesario
+        if (!email) return Mensaje('Usuario no registrado', 'error');
+        rol = busq.data().rol || rol;
+      } catch(e) {
+        console.error('lookup usuario->email', e);
+        return Mensaje('Usuario no registrado', 'error');
+      }
+    } else {
+      // Entraron con email: buscar rol para cachear
+      try {
+        const q = await getDocs(query(collection(db, midb), where('email','==', email)));
+        if (!q.empty) rol = q.docs[0].data().rol || rol;
+      } catch(e) { console.warn('lookup rol by email', e); }
+    }
 
-    await signInWithEmailAndPassword(auth, email, password); // Iniciando
-    savels(wiAuthIn,'wIn',24); savels(wiAuthRol, busq.data().rol, 24); accederRol(busq.data().rol);  //Actualizando seguridad
-  }catch(e){
+    await signInWithEmailAndPassword(auth, email, password);
+
+    savels(wiAuthIn,'wIn',24);
+    savels(wiAuthRol, rol, 24);
+    accederRol(rol);
+  } catch(e) {
     const errores = {
-      'auth/invalid-credential': 'Contraseña incorrecta',
+      'auth/invalid-credential': 'Email o contraseña incorrectos',
       'auth/invalid-email': 'Falta registrar Email',
       'auth/missing-email': 'Email o usuario no registrado'
-    }; Mensaje(errores[e.code] || e.message, 'error'); console.error(e);   
+    };
+    Mensaje(errores[e.code] || e.message, 'error'); 
+    console.error(e);
   }
 });
 
