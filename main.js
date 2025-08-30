@@ -12,8 +12,7 @@ const syncHeights = () => $('.webz').each((_, el) => {
 });
 const debouncedSync = (() => {
   let t; return () => (clearTimeout(t), t = setTimeout(syncHeights, 120));
-})();
-
+})(); 
 $(debouncedSync);
 $(window).on('load resize orientationchange', debouncedSync);
 
@@ -28,7 +27,7 @@ const CFG = {
   LIM_HOJAS: 50,
   IMG_FALLBACK: 'https://i.postimg.cc/KvN8qF2P/menu-default.jpg'
 };
-
+ 
 const money = v => (v == null || v === '') ? '' : `S/${Number(v).toFixed(2)}`;
 
 // Render de una hoja con imagen/título/nota/icono dinámicos
